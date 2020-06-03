@@ -3,21 +3,16 @@ package com.fortatic.apps.dtoexample.ui
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.fortatic.apps.dtoexample.data.domain.Comments
 import com.fortatic.apps.dtoexample.data.domain.Posts
 import com.fortatic.apps.dtoexample.data.mapper.PostsDataMapper
 import com.fortatic.apps.dtoexample.data.network.Api
 import com.fortatic.apps.dtoexample.data.network.toDomainModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class MainViewModel : ViewModel() {
-
-    private val viewModelJob = Job()
-    private val scope = CoroutineScope(Dispatchers.Main + viewModelJob)
 
     private val _coments = MutableLiveData<List<Comments>>()
     val coments: LiveData<List<Comments>>
@@ -28,17 +23,12 @@ class MainViewModel : ViewModel() {
         get() = _posts
 
     init {
-        Timber.i("init VM")
+        Timber.i("MainViewModel has created")
         getCommentsFromNetwork()
         getPostsFromNetwork()
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        viewModelJob.cancel()
-    }
-
-    private fun getCommentsFromNetwork() = scope.launch {
+    private fun getCommentsFromNetwork() = viewModelScope.launch {
         try {
             Timber.i("init getCommentsFromNetwork")
             val defCommentList = Api.retrofitService.getCommentsAsync().await().toDomainModel()
@@ -48,7 +38,7 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    private fun getPostsFromNetwork() = scope.launch {
+    private fun getPostsFromNetwork() = viewModelScope.launch {
         try {
             Timber.i("init getPostsFromNetwork")
             val defPostsList = Api.retrofitService.getPostsAsync().await()
